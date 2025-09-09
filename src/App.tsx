@@ -7,6 +7,10 @@ import Index from "./pages/Index";
 import AboutUs from './pages/AboutUs';
 import ContactUs from "./pages/ContactUs";
 import Fleet from "./pages/Fleet";
+import MeetingsGroups from "./pages/services/MeetingsGroups";
+import Motorcoaches from "./pages/services/Motorcoaches";
+import AirportGreetings from "./pages/services/AirportGreetings";
+import ReturnToWork from "./pages/services/ReturnToWork";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +25,10 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/fleet" element={<Fleet />} />
+            <Route path="/services/meetings-groups" element={<MeetingsGroups />} />
+            <Route path="/services/motorcoaches" element={<Motorcoaches />} />
+            <Route path="/services/airport-greetings" element={<AirportGreetings />} />
+            <Route path="/services/return-to-work" element={<ReturnToWork />} />
             <Route path="/contact" element={<ContactUs />} />
 
           </Routes>

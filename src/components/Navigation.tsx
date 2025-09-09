@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, Facebook, Instagram, Twitter } from "lucide-react";
+import { Menu, Facebook, Instagram, Twitter, ChevronDown } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -7,6 +7,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 const Navigation = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isServicesOpen, setIsServicesOpen] = useState(false);
+  const [dropdownTimeout, setDropdownTimeout] = useState<NodeJS.Timeout | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -38,6 +40,9 @@ const Navigation = () => {
       if (document.head.contains(style)) {
         document.head.removeChild(style);
       }
+      if (dropdownTimeout) {
+        clearTimeout(dropdownTimeout);
+      }
     };
   }, []);
 
@@ -66,11 +71,50 @@ const Navigation = () => {
     }
   };
 
+  const handleServicesEnter = () => {
+    if (dropdownTimeout) {
+      clearTimeout(dropdownTimeout);
+    }
+    setIsServicesOpen(true);
+  };
+
+  const handleServicesLeave = () => {
+    // Add a small delay before closing to allow cursor to move to dropdown
+    const timeout = setTimeout(() => {
+      setIsServicesOpen(false);
+    }, 200);
+    setDropdownTimeout(timeout);
+  };
+
+  const handleDropdownEnter = () => {
+    if (dropdownTimeout) {
+      clearTimeout(dropdownTimeout);
+    }
+    setIsServicesOpen(true);
+  };
+
+  const handleDropdownLeave = () => {
+    // Close immediately when leaving dropdown
+    setIsServicesOpen(false);
+  };
+
+  const serviceItems = [
+    { name: "Meetings and Groups", path: "/services/meetings-groups" },
+    { name: "MotorCoaches", path: "/services/motorcoaches" },
+    { name: "Airport Greetings", path: "/services/airport-greetings" },
+    { name: "Return to Work Shuttle", path: "/services/return-to-work" },
+  ];
+
   const navItems = [
     { name: "Home", path: "/", onClick: (e: React.MouseEvent) => handleHomeClick(e) },
-    { name: "About Us", path: "/about" },
-    { name: "Services", path: "/", onClick: (e: React.MouseEvent) => handleHomeClick(e, 'services') },
+    { 
+      name: "Services", 
+      path: "#",
+      isDropdown: true,
+      items: serviceItems
+    },
     { name: "Our Fleet", path: "/fleet" },
+    { name: "About Us", path: "/about" },
     { name: "Contact", path: "/contact" },
   ];
 
@@ -142,26 +186,55 @@ const Navigation = () => {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
               {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  onClick={(e) => {
-                    if (item.onClick) {
-                      item.onClick(e);
-                    }
-                  }}
-                  className="text-sm text-gray-300 hover:text-white transition-all duration-300 relative group"
-                >
-                  {item.name}
-                  {/* Animated underline for Services */}
-                  {item.name === "Services" && (
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-green-500 transition-all duration-300 group-hover:w-full"></span>
-                  )}
-                  {/* Regular underline for other items */}
-                  {item.name !== "Services" && (
+                item.isDropdown ? (
+                  <div 
+                    key={item.name}
+                    className="relative"
+                    onMouseEnter={handleServicesEnter}
+                    onMouseLeave={handleServicesLeave}
+                  >
+                    <button
+                      className="text-sm text-gray-300 hover:text-white transition-all duration-300 relative flex items-center"
+                    >
+                      {item.name}
+                      <ChevronDown className="ml-1 w-4 h-4 transition-transform duration-300" />
+                    </button>
+                    
+                    {/* Services Dropdown */}
+                    {isServicesOpen && (
+                      <div 
+                        className="absolute top-full left-0 mt-0 w-48 bg-[#1B1B1B] border border-white/10 rounded-lg shadow-2xl py-2 z-50"
+                        onMouseEnter={handleDropdownEnter}
+                        onMouseLeave={handleDropdownLeave}
+                      >
+                        {item.items?.map((service) => (
+                          <Link
+                            key={service.name}
+                            to={service.path}
+                            className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                            onClick={() => setIsServicesOpen(false)}
+                          >
+                            {service.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    onClick={(e) => {
+                      if (item.onClick) {
+                        item.onClick(e);
+                      }
+                    }}
+                    className="text-sm text-gray-300 hover:text-white transition-all duration-300 relative group"
+                  >
+                    {item.name}
                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
-                  )}
-                </Link>
+                  </Link>
+                )
               ))}
               <Button 
                 className="bg-green-600 hover:bg-green-700 text-white transition-transform duration-300 hover:scale-105"
@@ -182,19 +255,37 @@ const Navigation = () => {
                 <SheetContent className="bg-[#1B1B1B]">
                   <div className="flex flex-col gap-6 mt-8">
                     {navItems.map((item) => (
-                      <Link
-                        key={item.name}
-                        to={item.path}
-                        className="text-lg text-gray-300 hover:text-white transition-colors transform hover:translate-x-2 duration-300"
-                        onClick={(e) => {
-                          if (item.onClick) {
-                            item.onClick(e);
-                          }
-                          setIsMobileMenuOpen(false);
-                        }}
-                      >
-                        {item.name}
-                      </Link>
+                      item.isDropdown ? (
+                        <div key={item.name} className="space-y-2">
+                          <p className="text-lg font-semibold text-white">{item.name}</p>
+                          <div className="pl-4 space-y-2">
+                            {item.items?.map((service) => (
+                              <Link
+                                key={service.name}
+                                to={service.path}
+                                className="block text-gray-300 hover:text-white transition-colors"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              >
+                                {service.name}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <Link
+                          key={item.name}
+                          to={item.path}
+                          className="text-lg text-gray-300 hover:text-white transition-colors transform hover:translate-x-2 duration-300"
+                          onClick={(e) => {
+                            if (item.onClick) {
+                              item.onClick(e);
+                            }
+                            setIsMobileMenuOpen(false);
+                          }}
+                        >
+                          {item.name}
+                        </Link>
+                      )
                     ))}
                     <div className="pt-4 border-t border-gray-700">
                       <Button 
