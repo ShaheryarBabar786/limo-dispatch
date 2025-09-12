@@ -3,92 +3,14 @@ import { Car, Users, Luggage, Clock, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-
-// Fleet data
-const fleetData = [
-  {
-    id: 1,
-    name: "Luxury Sedan",
-    image: "/lovable-uploads/hero-home.jpg",
-    price: "$125 / per hour",
-    capacity: 3,
-    luggage: 3,
-    description: "Elegant travel with premium features. Designed for executives and couples seeking style, comfort, and a smooth ride.",
-    features: ["Premium Leather Interior", "Climate Control", "WiFi Enabled", "Complementary Water"]
-  },
-  {
-    id: 2,
-    name: "Economy Sedan",
-    image: "/lovable-uploads/hero-home.jpg",
-    price: "$75 / per hour",
-    capacity: 3,
-    luggage: 3,
-    description: "Affordable comfort for everyday travel. A reliable choice with seating for up to four passengers, ideal for quick city transfers and airport rides.",
-    features: ["Comfortable Seating", "Air Conditioning", "Reliable Service", "Affordable Pricing"]
-  },
-  {
-    id: 3,
-    name: "Luxury SUV",
-    image: "/lovable-uploads/hero-home.jpg",
-    price: "$95 / per hour",
-    capacity: 6,
-    luggage: 6,
-    description: "Maximum comfort for larger groups. Premium amenities and a spacious interior design, perfect for corporate groups and family trips.",
-    features: ["Spacious Interior", "Premium Entertainment", "All-Wheel Drive", "Refreshment Bar"]
-  },
-  {
-    id: 4,
-    name: "SUV",
-    image: "/lovable-uploads/hero-home.jpg",
-    price: "$85 / per hour",
-    capacity: 6,
-    luggage: 6,
-    description: "Spacious and versatile for families or small groups. Ample luggage space and a comfortable interior make it perfect for leisure trips and business outings.",
-    features: ["Ample Luggage Space", "Comfortable Seating", "Versatile Use", "Family Friendly"]
-  },
-  {
-    id: 5,
-    name: "Mercedes S-Class",
-    image: "/lovable-uploads/hero-home.jpg",
-    price: "$199 / per hour",
-    capacity: 3,
-    luggage: 3,
-    description: "Ultimate luxury and sophistication. The pinnacle of executive transportation with state-of-the-art features and unparalleled comfort.",
-    features: ["Executive Class", "Advanced Technology", "Massage Seats", "Premium Sound System"]
-  },
-  {
-    id: 6,
-    name: "BMW 7 Series",
-    image: "/lovable-uploads/hero-home.jpg",
-    price: "$189 / per hour",
-    capacity: 3,
-    luggage: 3,
-    description: "German engineering excellence. A perfect blend of performance, luxury, and cutting-edge technology for the discerning traveler.",
-    features: ["Sporty Performance", "Luxury Interior", "Advanced Safety", "WiFi Enabled"]
-  },
-  {
-    id: 7,
-    name: "Lincoln Stretch Limousine",
-    image: "/lovable-uploads/hero-home.jpg",
-    price: "$249 / per hour",
-    capacity: 8,
-    luggage: 6,
-    description: "The ultimate party or executive vehicle. Perfect for special occasions, weddings, and corporate events with ample space and luxury amenities.",
-    features: ["8 Passenger Capacity", "LED Lighting", "Refreshment Bar", "Privacy Partition"]
-  },
-  {
-    id: 8,
-    name: "Cadillac Escalade",
-    image: "/lovable-uploads/hero-home.jpg",
-    price: "$179 / per hour",
-    capacity: 7,
-    luggage: 6,
-    description: "American luxury at its finest. Spacious, powerful, and equipped with all the modern amenities for a superior travel experience.",
-    features: ["7 Seats", "All-Wheel Drive", "Entertainment System", "Premium Audio"]
-  }
-];
+import { fleetData } from "../../src/data/fleetData";
 
 const Fleet = () => {
+  const transformedFleetData = fleetData.map(vehicle => ({
+    ...vehicle,
+    price: `$${vehicle.basePrice} / per hour`,
+  }));
+
   return (
     <div className="min-h-screen bg-black text-foreground">
       <Navigation />
@@ -129,7 +51,7 @@ const Fleet = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
-            {fleetData.map((vehicle) => (
+            {transformedFleetData.map((vehicle) => (
               <motion.div
                 key={vehicle.id}
                 initial={{ opacity: 0, y: 20 }}
