@@ -1,0 +1,22 @@
+{
+  "name": "limo-dispatch-server",
+  "version": "1.0.0",
+  "description": "Backend server for Limo Dispatch",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "server": "nodemon index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.40.7",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
