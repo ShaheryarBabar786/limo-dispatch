@@ -33,6 +33,7 @@ import Login from "./pages/Admin/authentication/Login";
 import Dashboard from "./pages/Admin/views/Dashboard";
 import UserProfile from "./pages/Admin/views/UserProfile";
 import TableList from "./pages/Admin/views/TableList";
+import FleetManagement from "./pages/Admin/views/FleetManagement";
 
 interface RouteType {
   path: string;
@@ -82,6 +83,7 @@ function AdminLayout() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/user" element={<UserProfile />} />
             <Route path="/table" element={<TableList />} />
+            <Route path="/fleet" element={<FleetManagement />} />
             <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
           </Routes>
         </div>

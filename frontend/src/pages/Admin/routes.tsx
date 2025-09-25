@@ -2,6 +2,7 @@
 import Dashboard from "./views/Dashboard";
 import UserProfile from "./views/UserProfile";
 import TableList from "./views/TableList";
+import FleetManagement from "./views/FleetManagement"; // Add this import
 
 interface DashboardRoute {
   path: string;
@@ -22,6 +23,7 @@ const dashboardRoutes: DashboardRoute[] = [
     component: Dashboard,
     layout: "/admin"
   },
+ 
   {
     path: "/table",
     name: "Booking Management",
@@ -30,12 +32,19 @@ const dashboardRoutes: DashboardRoute[] = [
     layout: "/admin"
   },
   {
+    path: "/fleet",
+    name: "Fleet Management",
+    icon: "fa fa-bus",   
+    component: FleetManagement,
+    layout: "/admin"
+  },
+  {
     path: "/user",
     name: "User Profile",
     icon: "fa fa-user",   
     component: UserProfile,
     layout: "/admin"
-  }
+  },
 ];
 
 export default dashboardRoutes;

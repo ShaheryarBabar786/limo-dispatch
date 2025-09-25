@@ -4,6 +4,7 @@ const cors = require('cors');
 
 const authRoutes = require('./routes/auth');
 const bookingRoutes = require('./routes/booking');
+const fleetRoutes = require('./routes/fleet');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -21,6 +22,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/fleet', fleetRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

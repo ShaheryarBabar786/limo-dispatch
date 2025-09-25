@@ -35,19 +35,21 @@ function Sidebar({ color, image, routes }: SidebarProps) {
       />
       
       <div className="sidebar-wrapper align-items-center">
-        <div className="logo d-flex align-items-center justify-content-start">
-          <a
-            href="https://www.creative-tim.com?ref=lbd-sidebar"
-            className="simple-text logo-mini mx-1"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <div className="logo-img">
-              {/* <img src={require("assets/img/reactlogo.png")} alt="Creative Tim Logo" /> */}
-            </div>
-          </a>
-          Limo Dispatch Admin
-        </div>
+      <div className="logo d-flex flex-column align-items-center justify-content-center py-3">
+  <h4
+    className="m-0 text-center"
+    style={{
+      fontWeight: "600",
+      fontSize: "1.2rem",
+      color: "#fff",
+      letterSpacing: "1px",
+      textShadow: "0 1px 2px rgba(0,0,0,0.3)"
+    }}
+  >
+    Limo Dispatch Admin
+  </h4>
+</div>
+
         
         <Nav>
           {routes.map((prop, key) => {

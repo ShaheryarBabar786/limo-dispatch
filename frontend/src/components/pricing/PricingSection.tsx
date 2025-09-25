@@ -1,11 +1,24 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { CardSpotlight } from "./CardSpotlight";
 import { Calendar, Clock, MapPin, Navigation, Car, Search, CheckCircle, Users, Luggage } from "lucide-react";
 import MapComponent from "./MapComponent";
-import { fleetData } from "../../data/fleetData";
-import { bookingAPI } from "@/services/api";
+import { fleetAPI, bookingAPI } from "@/services/api";
+
+interface Vehicle {
+  id: number;
+  name: string;
+  type: string;
+  image_url: string;
+  base_price: number;
+  capacity: number;
+  luggage_capacity: number;
+  transfer_types: string[];
+  description: string;
+  features: string[];
+  is_active: boolean;
+}
 
 const BookingStep = ({ number, title, active = false, completed = false }) => (
   <div className="flex items-center mb-8">
@@ -30,9 +43,11 @@ const BookingStep = ({ number, title, active = false, completed = false }) => (
 
 export const PricingSection = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [availableVehicles, setAvailableVehicles] = useState([]);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [availableVehicles, setAvailableVehicles] = useState<Vehicle[]>([]);
+  const [allVehicles, setAllVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingError, setBookingError] = useState("");
   
@@ -51,6 +66,20 @@ export const PricingSection = () => {
     specialRequests: ''
   });
 
+  // Load all vehicles on component mount
+  useEffect(() => {
+    loadAllVehicles();
+  }, []);
+
+  const loadAllVehicles = async () => {
+    try {
+      const response = await fleetAPI.getAll({ active: true });
+      setAllVehicles(response.data.vehicles || []);
+    } catch (error) {
+      console.error('Error loading vehicles:', error);
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -59,25 +88,33 @@ export const PricingSection = () => {
     }));
   };
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
+    setSearchLoading(true);
     
-    // Filter vehicles based on capacity and transfer type
-    const filteredVehicles = fleetData.filter(vehicle => {
-      const hasCapacity = vehicle.capacity >= parseInt(formData.passengers.toString());
-      const supportsTransfer = vehicle.transferTypes.includes(formData.transferType);
-      const matchesType = formData.carType === 'all' || vehicle.type === formData.carType;
+    try {
+      // Filter vehicles based on capacity and transfer type
+      const filteredVehicles = allVehicles.filter(vehicle => {
+        const hasCapacity = vehicle.capacity >= parseInt(formData.passengers.toString());
+        const supportsTransfer = vehicle.transfer_types.includes(formData.transferType);
+        const matchesType = formData.carType === 'all' || vehicle.type === formData.carType;
+        
+        return hasCapacity && supportsTransfer && matchesType;
+      });
       
-      return hasCapacity && supportsTransfer && matchesType;
-    });
-    
-    setAvailableVehicles(filteredVehicles);
-    setCurrentStep(2);
+      setAvailableVehicles(filteredVehicles);
+      setCurrentStep(2);
+    } catch (error) {
+      console.error('Error searching vehicles:', error);
+      setBookingError('Failed to search vehicles. Please try again.');
+    } finally {
+      setSearchLoading(false);
+    }
   };
 
   // Calculate price based on transfer type
-  const calculatePrice = (vehicle) => {
-    let price = vehicle.basePrice;
+  const calculatePrice = (vehicle: Vehicle) => {
+    let price = vehicle.base_price;
     
     if (formData.transferType === "round-trip") {
       price = price * 1.8;
@@ -118,9 +155,12 @@ export const PricingSection = () => {
         pickup_date: formData.pickupDate,
         pickup_time: formData.pickupTime,
         vehicle_type: selectedVehicle.type,
+        vehicle_id: selectedVehicle.id,
         passengers: parseInt(formData.passengers.toString()),
         special_requests: formData.specialRequests,
-        total_price: calculatePrice(selectedVehicle)
+        total_price: calculatePrice(selectedVehicle),
+        transfer_type: formData.transferType,
+        waiting_hours: formData.waitingHours
       };
 
       const response = await bookingAPI.create(bookingData);
@@ -129,9 +169,9 @@ export const PricingSection = () => {
         setBookingSuccess(true);
         setCurrentStep(3);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Booking error:', error);
-      setBookingError('Failed to submit booking. Please try again.');
+      setBookingError(error.response?.data?.error || 'Failed to submit booking. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -316,6 +356,7 @@ export const PricingSection = () => {
                     <option value="sedan">Sedan</option>
                     <option value="suv">SUV</option>
                     <option value="limousine">Limousine</option>
+                    
                   </select>
                 </div>
 
@@ -341,10 +382,20 @@ export const PricingSection = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-base font-semibold"
+                  disabled={searchLoading}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-base font-semibold disabled:opacity-50"
                 >
-                  <Search className="w-5 h-5 mr-2" />
-                  Search Available Vehicles
+                  {searchLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Searching...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-5 h-5 mr-2" />
+                      Search Available Vehicles
+                    </>
+                  )}
                 </Button>
               </form>
             </CardSpotlight>
@@ -391,9 +442,12 @@ export const PricingSection = () => {
                     >
                       <div className="h-32 bg-gray-700 rounded mb-4 flex items-center justify-center">
                         <img 
-                          src={vehicle.image} 
+                          src={vehicle.image_url || "/lovable-uploads/hero-home.jpg"} 
                           alt={vehicle.name}
                           className="h-full w-full object-cover rounded"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/lovable-uploads/hero-home.jpg';
+                          }}
                         />
                       </div>
                       <h4 className="text-lg font-semibold text-white mb-2">{vehicle.name}</h4>
@@ -404,7 +458,7 @@ export const PricingSection = () => {
                       </div>
                       <div className="flex items-center text-sm text-gray-400 mb-3">
                         <Luggage className="w-4 h-4 mr-1" />
-                        {vehicle.luggage} luggage
+                        {vehicle.luggage_capacity} luggage
                       </div>
                       <p className="text-green-500 font-bold text-xl">
                         ${calculatePrice(vehicle)}
@@ -489,6 +543,12 @@ export const PricingSection = () => {
                         
                         <div className="text-gray-400">Destination:</div>
                         <div className="text-white">{formData.dropoffLocation}</div>
+                        
+                        <div className="text-gray-400">Transfer Type:</div>
+                        <div className="text-white capitalize">{formData.transferType.replace('-', ' ')}</div>
+                        
+                        <div className="text-gray-400">Passengers:</div>
+                        <div className="text-white">{formData.passengers}</div>
                       </div>
                     </div>
 
@@ -497,7 +557,14 @@ export const PricingSection = () => {
                       disabled={loading || !formData.customerName || !formData.customerEmail}
                       className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed mt-4"
                     >
-                      {loading ? "Submitting..." : "Confirm Booking"}
+                      {loading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Submitting...
+                        </>
+                      ) : (
+                        "Confirm Booking"
+                      )}
                     </Button>
                   </div>
                 )}
@@ -516,7 +583,9 @@ export const PricingSection = () => {
               Thank you for your booking! We have received your request and will contact you shortly to confirm the details.
             </p>
             <div className="bg-gray-800 p-4 rounded-lg mb-6 text-left">
-              {/* <h5 className="font-semibold text-white mb-2">Booking Reference: #{selectedVehicle?.id.slice(-8).toUpperCase()}</h5> */}
+              <h5 className="font-semibold text-white mb-2">Booking Details:</h5>
+              <p className="text-gray-300 text-sm">Vehicle: {selectedVehicle?.name}</p>
+              <p className="text-gray-300 text-sm">Total: ${selectedVehicle ? calculatePrice(selectedVehicle) : 0}</p>
               <p className="text-gray-300 text-sm">
                 A confirmation email has been sent to {formData.customerEmail}
               </p>

@@ -1,15 +1,55 @@
 import { motion } from "framer-motion";
 import { Car, Users, Luggage, Clock, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../../components/ui/button";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { fleetData } from "../../../src/data/fleetData";
+import { useState, useEffect } from "react";
+import { fleetAPI } from "../../services/api";
+
+interface Vehicle {
+  id: number;
+  name: string;
+  type: string;
+  image_url: string;
+  base_price: number;
+  capacity: number;
+  luggage_capacity: number;
+  transfer_types: string[];
+  description: string;
+  features: string[];
+  is_active: boolean;
+}
 
 const Fleet = () => {
-  const transformedFleetData = fleetData.map(vehicle => ({
-    ...vehicle,
-    price: `$${vehicle.basePrice} / per hour`,
-  }));
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadVehicles();
+  }, []);
+
+  const loadVehicles = async () => {
+    try {
+      setLoading(true);
+      const response = await fleetAPI.getAll({ active: true });
+      setVehicles(response.data.vehicles || []);
+    } catch (error) {
+      console.error('Error loading vehicles:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-foreground flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600 mx-auto"></div>
+          <p className="text-white mt-4">Loading fleet...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-foreground">
@@ -51,7 +91,7 @@ const Fleet = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
-            {transformedFleetData.map((vehicle) => (
+            {vehicles.map((vehicle) => (
               <motion.div
                 key={vehicle.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -61,9 +101,12 @@ const Fleet = () => {
               >
                 <div className="relative">
                   <img
-                    src={vehicle.image}
+                    src={vehicle.image_url || "/lovable-uploads/hero-home.jpg"}
                     alt={vehicle.name}
                     className="w-full h-48 object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/lovable-uploads/hero-home.jpg';
+                    }}
                   />
                   <div className="absolute top-3 left-3 bg-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
                     PREMIUM
@@ -73,7 +116,7 @@ const Fleet = () => {
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-xl font-bold text-white">{vehicle.name}</h3>
-                    <p className="text-green-400 font-bold text-lg">{vehicle.price}</p>
+                    <p className="text-green-400 font-bold text-lg">${vehicle.base_price} / per hour</p>
                   </div>
                   
                   <div className="flex justify-between items-center mb-4">
@@ -83,7 +126,7 @@ const Fleet = () => {
                     </div>
                     <div className="flex items-center">
                       <Luggage className="w-4 h-4 text-green-600 mr-2" />
-                      <span className="text-gray-300 text-sm">Luggage: {vehicle.luggage}</span>
+                      <span className="text-gray-300 text-sm">Luggage: {vehicle.luggage_capacity}</span>
                     </div>
                   </div>
                   

@@ -44,4 +44,14 @@ export const bookingAPI = {
   delete: (id: string) => api.delete(`/bookings/${id}`),
 };
 
+export const fleetAPI = {
+  getAll: (params?: { page?: number; limit?: number; type?: string; active?: boolean }) => 
+    api.get('/fleet', { params }),
+  getById: (id: string) => api.get(`/fleet/${id}`),
+  create: (vehicleData: any) => api.post('/fleet', vehicleData),
+  update: (id: string, vehicleData: any) => api.put(`/fleet/${id}`, vehicleData),
+  delete: (id: string) => api.delete(`/fleet/${id}`),
+  toggleStatus: (id: string) => api.patch(`/fleet/${id}/status`),
+};
+
 export default api;
